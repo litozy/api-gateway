@@ -1,17 +1,27 @@
 package middleware
 
 import (
-	"context"
 	"fmt"
-	"service-user/config"
 	"service-user/helpers"
 	"service-user/model"
+	"service-user/repository"
 
 	"github.com/gofiber/fiber/v2"
-	"go.mongodb.org/mongo-driver/bson"
 )
 
-func Authentication(c *fiber.Ctx) error {
+type Auth interface {
+	Authentication(c *fiber.Ctx) error
+}
+
+type auth struct {
+	userRepo repository.UserRepository
+}
+
+func NewAuth(userRepo repository.UserRepository) Auth {
+	return &auth{userRepo: userRepo}
+}
+
+func (auth *auth) Authentication(c *fiber.Ctx) error {
 	access_token := c.Get("access_token")
 
 	if len(access_token) == 0 {
@@ -27,12 +37,15 @@ func Authentication(c *fiber.Ctx) error {
 	fmt.Println(checkToken, "CEKKKK" ,checkToken["email"])
 
 	var user model.User
-	db := config.GetMongoDatabase().Collection("user")
-
-	err = db.FindOne(context.TODO(), bson.D{{"email", checkToken["email"]}}).Decode(&user)
+	existData, err := auth.userRepo.FindOneByEmail(user.Email)
 	if err != nil {
-		fmt.Println(err, "Error fetching user from database")
-		return c.Status(401).SendString("Invalid token: User not found")
+		return fmt.Errorf("auth.Authentication(): %w", err)
+	}
+	if existData == nil {
+		return &helpers.AppError{
+			ErrorCode:    1,
+			ErrorMessage: "Email is not registered",
+		}
 	}
 
 	// Set user data in context for future use

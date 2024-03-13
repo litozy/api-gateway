@@ -3,12 +3,11 @@ package controller
 import (
 	"fmt"
 	"net/http"
-	"service-employee/config"
 	"service-employee/model"
+	"service-employee/usecase"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
-	"go.mongodb.org/mongo-driver/bson"
 )
 
 var user_uri string = "http://localhost:3001/user"
@@ -19,15 +18,31 @@ type WebResponse struct {
 	Data interface{}
 }
 
-func CreateEmployee(c *fiber.Ctx) error {
-	db := config.GetMongoDatabase().Collection("employee")
+type EmployeeController interface {
+	CreateEmployee(c *fiber.Ctx) error
+}
+
+type empController  struct {
+	usecase usecase.EmployeeUsecase
+}
+
+func NewEmployeeController(usecase usecase.EmployeeUsecase) EmployeeController {
+	return &empController{usecase: usecase}
+}
+
+func (emp *empController) CreateEmployee(c *fiber.Ctx) error {
 	var requestBody model.Employee
-
-	c.BodyParser(&requestBody)
-
 	requestBody.Id = uuid.New().String()
+	err := c.BodyParser(&requestBody)
+	if err != nil {
+		c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"success":      false,
+			"errorMessage": "Invalid JSON data",
+		})
+	}
 
-	access_token := c.Get("access_token")
+	access_token := c.Cookies("access_token")
+	fmt.Println(access_token, "ini token")
 	if len(access_token) == 0 {
 		return c.Status(401).SendString("Invalid token: Access token missing")
 	}
@@ -59,13 +74,7 @@ func CreateEmployee(c *fiber.Ctx) error {
 		c.Status(401).SendString("invalid token")
 	}
 
-	ctx, cancel := config.NewMongoContext()
-	defer cancel()
-
-	_, err = db.InsertOne(ctx, bson.M{
-		"name": requestBody.Name,
-	})
-
+	err = emp.usecase.CreateEmployee(&requestBody, c)
 	if err != nil {
 		panic(err)
 	}

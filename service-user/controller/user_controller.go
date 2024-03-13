@@ -1,16 +1,13 @@
 package controller
 
 import (
-	"context"
 	"errors"
+	"fmt"
 	"service-user/helpers"
 	"service-user/model"
-
-	"service-user/config"
+	"service-user/usecase"
 
 	"github.com/gofiber/fiber/v2"
-	"github.com/google/uuid"
-	"go.mongodb.org/mongo-driver/bson"
 )
 
 type WebResponse struct {
@@ -19,24 +16,45 @@ type WebResponse struct {
 	Data interface{}
 }
 
-func Register(c *fiber.Ctx) error {
+type UserController interface {
+	Register(c *fiber.Ctx) error
+	Login(c *fiber.Ctx) error
+}
+
+type userController struct {
+	userUsecase usecase.UserUsecase
+}
+
+func NewUserController(userUsecase usecase.UserUsecase) UserController {
+    return &userController{userUsecase: userUsecase}
+}
+
+func (controller *userController) Register(c *fiber.Ctx) error {
 	var requestBody model.User
-	db := config.GetMongoDatabase().Collection("user")
-
-	requestBody.Id = uuid.New().String()
-
-	ctx, cancel := config.NewMongoContext()
-	defer cancel()
-
-	c.BodyParser(&requestBody)
-
-	_, err := db.InsertOne(ctx, bson.M{
-		"email": requestBody.Email,
-		"password": helpers.HashPassword([]byte(requestBody.Password)),
-	})
-
+	err := c.BodyParser(&requestBody)
 	if err != nil {
-		panic(err)
+		c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"success":      false,
+			"errorMessage": "Invalid JSON data",
+		})
+	}
+
+	err = controller.userUsecase.Register(&requestBody, c)
+	if err != nil {
+		appError := &helpers.AppError{}
+		if errors.As(err, &appError) {
+			fmt.Printf("user.Register() 1: %v", err.Error())
+			c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+				"success":      false,
+				"errorMessage": appError.Error(),
+			})
+		} else {
+			fmt.Printf("user.Register() 2: %v", err.Error())
+			c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+				"success":      false,
+				"errorMessage": "An error occurred while saving user data",
+			})
+		}
 	}
 
 	return c.JSON(WebResponse{
@@ -46,33 +64,51 @@ func Register(c *fiber.Ctx) error {
 	})
 }
 
-func Login(c *fiber.Ctx) error {
-	db := config.GetMongoDatabase().Collection("user")
-
+func (controller *userController) Login(c *fiber.Ctx) error {
 	var requestBody model.User
-	var result model.User
  
-	c.BodyParser(&requestBody)
-
-	err := db.FindOne(context.TODO(), bson.D{{"email", requestBody.Email}}).Decode(&result)
+	err := c.BodyParser(&requestBody)
 	if err != nil {
-		return c.JSON(WebResponse{
-			Code: 401,
-			Status: "BAD_REQUEST",
-			Data: err.Error(),
+		c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"success":      false,
+			"errorMessage": "Invalid JSON data",
 		})
 	}
 
-	checkPassword := helpers.ComparePassword([]byte(result.Password), []byte(requestBody.Password))
-	if !checkPassword {
-		return c.JSON(WebResponse{
+	data, err := controller.userUsecase.Login(&requestBody, c)
+	fmt.Println(data)
+	if err != nil {
+		appError := &helpers.AppError{}
+		if errors.As(err, &appError) {
+			fmt.Printf("controller.Login() 1: %v", err.Error())
+			c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+				"success":      false,
+				"errorMessage": appError.Error(),
+			})
+		} else {
+			fmt.Printf("controller.Login() 2: %v", err.Error())
+			c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+				"success":      false,
+				"errorMessage": "An error occurred during login",
+				"errorCode": err.Error(),
+			})
+		}
+	}
+	
+	if data == nil {
+		c.JSON(WebResponse{
 			Code: 401,
 			Status: "BAD_REQUEST",
-			Data: errors.New("invalid password").Error(),
+			Data: data,
 		})
 	}
 
 	access_token := helpers.SignToken(requestBody.Email)
+	c.Cookie(&fiber.Cookie{
+        Name:  "access_token",
+        Value: access_token,
+        Path:  "/", // Sesuaikan sesuai kebutuhan Anda
+    })
 
 	return c.JSON(struct{
 		Code int 
@@ -83,7 +119,7 @@ func Login(c *fiber.Ctx) error {
 		Code: 200,
 		Status: "OK",
 		AccessToken: access_token,
-		Data: result,
+		Data: data,
 	})
 }
 
