@@ -10,12 +10,6 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-type WebResponse struct {
-	Code int
-	Status string
-	Data interface{}
-}
-
 type UserController interface {
 	Register(c *fiber.Ctx) error
 	Login(c *fiber.Ctx) error
@@ -41,12 +35,12 @@ func (controller *userController) Register(c *fiber.Ctx) error {
 
 	err = controller.userUsecase.Register(&requestBody, c)
 	if err != nil {
-		appError := &helpers.AppError{}
-		if errors.As(err, &appError) {
+		webResponse := &helpers.WebResponse{}
+		if errors.As(err, &webResponse) {
 			fmt.Printf("user.Register() 1: %v", err.Error())
 			c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 				"success":      false,
-				"errorMessage": appError.Error(),
+				"errorMessage": webResponse.Error(),
 			})
 		} else {
 			fmt.Printf("user.Register() 2: %v", err.Error())
@@ -55,9 +49,14 @@ func (controller *userController) Register(c *fiber.Ctx) error {
 				"errorMessage": "An error occurred while saving user data",
 			})
 		}
+		return c.JSON(&helpers.WebResponse{
+			Code: 401,
+			Status: "BAD_REQUEST",
+			Data: webResponse.Error(),
+		})
 	}
 
-	return c.JSON(WebResponse{
+	return c.JSON(&helpers.WebResponse{
 		Code: 201,
 		Status: "OK",
 		Data: requestBody.Email,
@@ -76,32 +75,35 @@ func (controller *userController) Login(c *fiber.Ctx) error {
 	}
 
 	data, err := controller.userUsecase.Login(&requestBody, c)
-	fmt.Println(data)
 	if err != nil {
-		appError := &helpers.AppError{}
-		if errors.As(err, &appError) {
-			fmt.Printf("controller.Login() 1: %v", err.Error())
-			c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+		webResponse := &helpers.WebResponse{}
+		if errors.As(err, &webResponse) {
+			fmt.Printf("user.Login() 1: %v", err.Error())
+			c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 				"success":      false,
-				"errorMessage": appError.Error(),
+				"errorMessage": webResponse.Error(),
 			})
 		} else {
-			fmt.Printf("controller.Login() 2: %v", err.Error())
-			c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			fmt.Printf("user.Login() 2: %v", err.Error())
+			c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 				"success":      false,
-				"errorMessage": "An error occurred during login",
-				"errorCode": err.Error(),
+				"errorMessage": "An error occurred while saving user data",
 			})
 		}
-	}
-	
-	if data == nil {
-		c.JSON(WebResponse{
+		return c.JSON(&helpers.WebResponse{
 			Code: 401,
 			Status: "BAD_REQUEST",
-			Data: data,
+			Data: webResponse.Error(),
 		})
 	}
+	
+	// if data == nil {
+	// 	c.JSON(WebResponse{
+	// 		Code: 401,
+	// 		Status: "BAD_REQUEST",
+	// 		Data: data,
+	// 	})
+	// }
 
 	access_token := helpers.SignToken(requestBody.Email)
 	c.Cookie(&fiber.Cookie{

@@ -1,7 +1,6 @@
 package usecase
 
 import (
-	"errors"
 	"fmt"
 	"service-user/helpers"
 	"service-user/model"
@@ -32,26 +31,26 @@ func NewUserUsecase(userRepo repository.UserRepository) UserUsecase {
 
 func (usecase *userUsecase) Register(user *model.User, c *fiber.Ctx) error {
 	if user.Email == "" {
-		return c.JSON(WebResponse{
+		return &helpers.WebResponse{
 			Code: 401,
 			Status: "BAD_REQUEST",
-			Data: "Email cannot be empty",
-		})
+			Data: "email cannot be empty",
+		}
 	}
 	if user.Password == "" {
-		return c.JSON(WebResponse{
+		return &helpers.WebResponse{
 			Code: 401,
 			Status: "BAD_REQUEST",
-			Data: "Password cannot be empty",
-		})
+			Data: "password cannot be empty",
+		}
 	}
 	existData, _ := usecase.userRepo.FindOneByEmail(user.Email)
 	if existData != nil {
-		return c.JSON(WebResponse{
+		return &helpers.WebResponse{
 			Code: 401,
 			Status: "BAD_REQUEST",
 			Data: fmt.Sprintf("Email %s already exists", user.Email),
-		})
+		}
 	}
 	hashedPassword := helpers.HashPassword([]byte(user.Password))
 	user.Id = uuid.New().String()
@@ -65,19 +64,19 @@ func (usecase *userUsecase) Login(user *model.User, c *fiber.Ctx) (*model.User, 
 		return nil, fmt.Errorf("usecase.Login(): %w", err)
 	}
 	if existData == nil {
-		return nil, c.JSON(WebResponse{
+		return nil, &helpers.WebResponse{
 			Code: 401,
 			Status: "BAD_REQUEST",
-			Data: "Email is not registered",
-		})
+			Data: "email is not a valid",
+		}
 	}
 	checkPassword := helpers.ComparePassword([]byte(existData.Password), []byte(user.Password))
 	if !checkPassword {
-		return nil, c.JSON(WebResponse{
+		return nil, &helpers.WebResponse{
 			Code: 401,
 			Status: "BAD_REQUEST",
-			Data: errors.New("invalid password").Error(),
-		})
+			Data: "password does not match",
+		}
 	}
 	return existData, nil
 }

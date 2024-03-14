@@ -1,10 +1,12 @@
 package controller
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"service-employee/model"
 	"service-employee/usecase"
+	"service-user/helpers"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
@@ -35,7 +37,7 @@ func (emp *empController) CreateEmployee(c *fiber.Ctx) error {
 	requestBody.Id = uuid.New().String()
 	err := c.BodyParser(&requestBody)
 	if err != nil {
-		c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"success":      false,
 			"errorMessage": "Invalid JSON data",
 		})
@@ -76,10 +78,28 @@ func (emp *empController) CreateEmployee(c *fiber.Ctx) error {
 
 	err = emp.usecase.CreateEmployee(&requestBody, c)
 	if err != nil {
-		panic(err)
+		webResponse := &helpers.WebResponse{}
+		if errors.As(err, &webResponse) {
+			fmt.Printf("user.Register() 1: %v", err.Error())
+			c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+				"success":      false,
+				"errorMessage": webResponse.Error(),
+			})
+		} else {
+			fmt.Printf("user.Register() 2: %v", err.Error())
+			c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+				"success":      false,
+				"errorMessage": "An error occurred while saving user data",
+			})
+		}
+		return c.JSON(&helpers.WebResponse{
+			Code: 401,
+			Status: "BAD_REQUEST",
+			Data: webResponse.Error(),
+		})
 	}
 
-	return c.JSON(WebResponse{
+	return c.JSON(&helpers.WebResponse{
 		Code: 201,
 		Status: "OK",
 		Data: requestBody,

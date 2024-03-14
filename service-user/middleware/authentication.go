@@ -42,9 +42,10 @@ func (auth *auth) Authentication(c *fiber.Ctx) error {
 		return fmt.Errorf("auth.Authentication(): %w", err)
 	}
 	if existData == nil {
-		return &helpers.AppError{
-			ErrorCode:    1,
-			ErrorMessage: "Email is not registered",
+		return &helpers.WebResponse{
+			Code: 401,
+			Status: "BAD_REQUEST",
+			Data: "email is not registered",
 		}
 	}
 
