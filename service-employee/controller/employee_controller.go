@@ -4,9 +4,9 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"service-employee/helpers"
 	"service-employee/model"
 	"service-employee/usecase"
-	"service-user/helpers"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
@@ -44,7 +44,6 @@ func (emp *empController) CreateEmployee(c *fiber.Ctx) error {
 	}
 
 	access_token := c.Cookies("access_token")
-	fmt.Println(access_token, "ini token")
 	if len(access_token) == 0 {
 		return c.Status(401).SendString("Invalid token: Access token missing")
 	}

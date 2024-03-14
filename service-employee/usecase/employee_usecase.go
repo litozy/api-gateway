@@ -1,9 +1,9 @@
 package usecase
 
 import (
+	"service-employee/helpers"
 	"service-employee/model"
 	"service-employee/repository"
-	"service-user/helpers"
 
 	"github.com/gofiber/fiber/v2"
 )

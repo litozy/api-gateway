@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"service-user/config"
+	"service-user/connection"
 	"service-user/controller"
 	"service-user/middleware"
 	"service-user/repository"
@@ -12,7 +12,7 @@ import (
 )
 
 func main() {
-	userInfra := config.NewInfraManager().GetDB()
+	userInfra := connection.NewPostgres().GetDB()
 	userRepository := repository.NewUserRepository(userInfra)
 	userUsecase := usecase.NewUserUsecase(userRepository)
 	userController := controller.NewUserController(userUsecase)

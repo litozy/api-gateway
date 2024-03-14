@@ -1,0 +1,25 @@
+version: "3.8"
+
+services:
+  service-user:
+    image: service-user:latest
+    ports:
+      - 3001:3001
+    depends_on:
+      - db
+
+  service-employee:
+    image: service-employee:latest
+    ports:
+      - 3002:3002
+    depends_on:
+      - db
+
+  db:
+    image: postgres:latest
+    environment:
+      - POSTGRES_DB=apigateaway
+      - POSTGRES_USER=postgresapi
+      - POSTGRES_PASSWORD=root
+    ports:
+      - 5432:5432
