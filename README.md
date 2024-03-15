@@ -1,11 +1,21 @@
-# api-gateway
-Tugas untuk kandidat programmer
+## api-gateway
 
-1. Ubah databasenya menjadi Postgresql
-2. Implementasikan dengan docker container (buat docker compose nya).
-3. Jadi 4 container
-   - Api gateway
-   - User
-   - Employee
-   - Postgresql
-4. Buat unit testing nya
+# Step 1
+
+```
+docker-compose up
+```
+
+# Step 2
+
+```
+migrate -path service-user/connection/migration -database postgres://postgresapi:root@localhost:5432/apigateaway?sslmode=disable up
+```
+
+# Technology
+
+Containerized Docker
+Framework: Fiber
+Database: PostgresSQL Docker
+Stack: Golang
+Unit Test: testify, mockdb

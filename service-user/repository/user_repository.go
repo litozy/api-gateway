@@ -25,7 +25,7 @@ func (userRepo *userRepository) CreateUser(user *model.User) error {
 	qry := "INSERT INTO users (id, email, password) VALUES ($1, $2, $3)"
 	_, err := userRepo.db.Exec(qry, &user.Id, &user.Email, &user.Password)
 	if err != nil {
-		return fmt.Errorf("error on employeeRepository.CreateEmployee() : %w", err)
+		return fmt.Errorf("error on userRepository.CreateEmployee() : %w", err)
 	}
 	return nil
 }

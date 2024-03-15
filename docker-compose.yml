@@ -2,21 +2,26 @@ version: "3.8"
 
 services:
   service-user:
-    image: service-user:latest
+    build: ./service-user
     ports:
       - 3001:3001
     depends_on:
       - db
 
   service-employee:
-    image: service-employee:latest
+    build: ./service-employee
     ports:
       - 3002:3002
     depends_on:
       - db
 
+  api-gateway:
+    build: ./api-gateaway
+    ports:
+      - 3000:3000
+
   db:
-    image: postgres:latest
+    build: ./db
     environment:
       - POSTGRES_DB=apigateaway
       - POSTGRES_USER=postgresapi

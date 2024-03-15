@@ -1,7 +1,7 @@
 go 1.20
 
 use (
-	./api-gateway
+	./api-gateaway
 	./service-employee
 	./service-user
 )

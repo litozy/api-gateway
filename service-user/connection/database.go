@@ -5,8 +5,10 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"os"
 	"time"
 
+	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
 )
 
@@ -18,12 +20,26 @@ type Database struct {
 	db *sql.DB
 }
 
+func init() {
+    err := godotenv.Load(".env")
+    if err != nil {
+        log.Fatalf("Error loading .env file: %v", err)
+    }
+}
+
 func (dbCon *Database) GetDB() *sql.DB {
 	var db *sql.DB
 	var err error
 
 	for i := 1; i <= 20; i++ {
-		db, err = sql.Open("postgres", "user=postgresapi host=db port=5432 password=root dbname=apigateaway sslmode=disable")
+		connStr := fmt.Sprintf("user=%s password=%s host=%s port=%s dbname=%s sslmode=disable",
+		os.Getenv("DB_USER"), 
+		os.Getenv("DB_PASSWORD"), 
+		os.Getenv("DB_HOST"), 
+		os.Getenv("DB_PORT"), 
+		os.Getenv("DB_NAME"))
+
+		db, err = sql.Open("postgres", connStr)
 		if err == nil {
 			err = db.Ping()
 		}
