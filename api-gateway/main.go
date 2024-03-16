@@ -1,7 +1,7 @@
 package main
 
 import (
-	"api-gateaway/controller"
+	"api-gateway/controller"
 	"fmt"
 
 	"github.com/gofiber/fiber/v2"

@@ -16,7 +16,7 @@ services:
       - db
 
   api-gateway:
-    build: ./api-gateaway
+    build: ./api-gateway
     ports:
       - 3000:3000
 
