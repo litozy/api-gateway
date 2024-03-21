@@ -3,7 +3,6 @@ package middleware
 import (
 	"fmt"
 	"service-user/helpers"
-	"service-user/model"
 	"service-user/repository"
 
 	"github.com/gofiber/fiber/v2"
@@ -22,7 +21,7 @@ func NewAuth(userRepo repository.UserRepository) Auth {
 }
 
 func (auth *auth) Authentication(c *fiber.Ctx) error {
-	access_token := c.Get("access_token")
+	access_token := c.Cookies("access_token")
 
 	if len(access_token) == 0 {
 		return c.Status(401).SendString("Invalid token: Access token missing")
@@ -36,8 +35,8 @@ func (auth *auth) Authentication(c *fiber.Ctx) error {
 
 	fmt.Println(checkToken, "CEKKKK" ,checkToken["email"])
 
-	var user model.User
-	existData, err := auth.userRepo.FindOneByEmail(user.Email)
+	existData, err := auth.userRepo.FindOneByEmail(checkToken["email"].(string))
+	fmt.Println(existData)
 	if err != nil {
 		return fmt.Errorf("auth.Authentication(): %w", err)
 	}
@@ -50,7 +49,7 @@ func (auth *auth) Authentication(c *fiber.Ctx) error {
 	}
 
 	// Set user data in context for future use
-	c.Locals("user", user)
+	c.Locals("user", existData)
 
 	// Continue processing if user is found
 	return c.Next()

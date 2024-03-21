@@ -12,7 +12,7 @@ import (
 	"github.com/google/uuid"
 )
 
-var user_uri string = "http://localhost:3001/user"
+var user_uri string = "http://service-user:3001/user"
 
 type WebResponse struct {
 	Code int
@@ -49,6 +49,7 @@ func (emp *empController) CreateEmployee(c *fiber.Ctx) error {
 	}
 
 	req, err := http.NewRequest("GET", user_uri + "/auth", nil)
+	fmt.Println(req)
 	if err != nil {
 		fmt.Println("Error creating request:", err)
 		panic(err)
@@ -63,7 +64,7 @@ func (emp *empController) CreateEmployee(c *fiber.Ctx) error {
 	resp, err := client.Do(req)
 	if err != nil {
 		fmt.Println("Error sending request:", err)
-		panic(err)
+		return c.Status(fiber.StatusInternalServerError).SendString("Error sending request")
 	}
 	defer resp.Body.Close()
 

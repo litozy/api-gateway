@@ -13,7 +13,6 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-
 type EmployeeUsecase interface {
 	CreateEmployee(user *model.Employee, ctx *MockContext) error
 }
