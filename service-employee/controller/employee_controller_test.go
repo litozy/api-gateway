@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"api-gateway/controller"
 	"bytes"
 	"encoding/json"
 	"net/http"
@@ -41,9 +42,7 @@ func TestCreateEmployee(t *testing.T) {
 		Id:   "C001",
 		Name: "John Doe",
 	}
-	jsonData, err := json.Marshal(requestBody)
-	assert.NoError(t, err)
-
+	jsonData, _ := json.Marshal(requestBody)
 	req := httptest.NewRequest(http.MethodPost, "/employee", bytes.NewBuffer(jsonData))
 	req.Header.Set("Content-Type", "application/json")
 
@@ -53,6 +52,7 @@ func TestCreateEmployee(t *testing.T) {
 		return c.SendStatus(http.StatusOK)
 	}
 	app.Get("/user/auth", userAuthHandler)
+	app.Post("/employee", controller.CreateEmployee)
 
 	resp, err := app.Test(req)
 	assert.NoError(t, err)

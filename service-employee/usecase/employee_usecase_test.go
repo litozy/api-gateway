@@ -43,7 +43,7 @@ func (r *repoMock) CreateEmployee(newEmployee *model.Employee) error {
 	return nil
 }
 
-func (s *employeeUsecaseTestSuite) TestEmployeeRegister_Success() {
+func (s *employeeUsecaseTestSuite) TestCreateEmployee_Success() {
 	dummyEmployee := &model.Employee{
 		Id:       dummyEmployees[0].Id,
 		Name:    dummyEmployees[0].Name,
@@ -55,7 +55,7 @@ func (s *employeeUsecaseTestSuite) TestEmployeeRegister_Success() {
 	assert.Nil(s.T(), err)
 }
 
-func (s *employeeUsecaseTestSuite) TestEmployeeRegister_Failed() {
+func (s *employeeUsecaseTestSuite) TestCreateEmployee_Failed() {
 	dummyEmployee := &model.Employee{
 		Id:       dummyEmployees[0].Id,
 		Name:    dummyEmployees[0].Name,
