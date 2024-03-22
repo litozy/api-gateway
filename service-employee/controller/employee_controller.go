@@ -92,11 +92,6 @@ func (emp *empController) CreateEmployee(c *fiber.Ctx) error {
 				"errorMessage": "An error occurred while saving user data",
 			})
 		}
-		return c.JSON(&helpers.WebResponse{
-			Code: 401,
-			Status: "BAD_REQUEST",
-			Data: webResponse.Error(),
-		})
 	}
 
 	return c.JSON(&helpers.WebResponse{

@@ -9,7 +9,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-var employee_uri string = "http://localhost:3002"
+var employee_uri string = "http://service-employee:3002"
 
 type EmployeeBodyReq struct {
 	Name string `json:"name"`
@@ -42,7 +42,7 @@ func CreateEmployee(c *fiber.Ctx) error {
 	// Set the Content-Type header
 	req.Header.Set("Content-Type", "application/json")
 
-	access_token := c.Get("access_token")
+	access_token := c.Cookies("access_token")
 	if len(access_token) == 0 {
 		return c.Status(401).SendString("Invalid token: Access token missing")
 	}

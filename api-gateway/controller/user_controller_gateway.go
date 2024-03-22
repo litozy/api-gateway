@@ -9,7 +9,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-var user_uri string = "http://localhost:3001/user"
+var user_uri string = "http://service-user:3001/user"
 
 type UserBodyReq struct {
 	Email    string `json:"email"`
@@ -35,6 +35,7 @@ func UserLogin(c *fiber.Ctx) error {
 	if err != nil {
 		panic(err)
 	}
+	access_token := c.Cookies("access_token")
 
 	resp, err := http.Post(user_uri+"/login", "application/json", bytes.NewBuffer(payload))
 	if err != nil {
@@ -47,15 +48,20 @@ func UserLogin(c *fiber.Ctx) error {
 		panic(err)
 	}
 
-	// fmt.Println("Response Status:", resp.Status)
-	// fmt.Println("Response Body:", string(body))
-
 	var res LoginResponse
 
+	// Mengisi AccessToken dengan nilai dari cookie
+	res.AccessToken = access_token
+
+	// Memetakan langsung ke LoginResponse
 	err = json.Unmarshal(body, &res)
 	if err != nil {
 		return err
 	}
+
+	// Mengisi Code dan Status
+	res.Code = resp.StatusCode
+	res.Status = resp.Status
 
 	return c.JSON(res)
 }

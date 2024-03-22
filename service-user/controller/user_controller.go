@@ -109,7 +109,7 @@ func (controller *userController) Login(c *fiber.Ctx) error {
 	c.Cookie(&fiber.Cookie{
         Name:  "access_token",
         Value: access_token,
-        Path:  "/", // Sesuaikan sesuai kebutuhan Anda
+        Path:  "/", 
     })
 
 	return c.JSON(struct{
